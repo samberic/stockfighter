@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.samatkinson.model.Trade;
 import org.junit.Rule;
 import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.hamcrest.CoreMatchers.is;
@@ -16,19 +17,21 @@ public class LevelTwoTest {
 
     @Test
     public void testName() throws Exception {
-
         int filledTradeCount = 104;
+        int price = 12311;
+        String account = "WPP20023868";
+
         String orderType = "market";
-        String url = "https://api.stockfighter.io/ob/api/venues/MFSEX/stocks/BYSE/orders";
-        stubFor(post(urlEqualTo(url))
+        String url = "/ob/api/venues/MFSEX/stocks/BYSE/orders";
+        stubFor(post(urlPathMatching(url))/*
                 .withRequestBody(equalToJson(
                         "{" +
-                                "    \"account\": \"WPP20023868\",\n" +
-                                "    \"price\": 12311,\n" +
-                                "    \"qty\": " + filledTradeCount + ",\n" +
-                                "    \"direction\": \"buy\",\n" +
-                                "    \"orderType\": \"" + orderType + "\"\n" +
-                                "}"))
+                                "\"orderType\": \"" + orderType + "\"" +
+                                "\"price\": " + price + "," +
+                                "\"qty\": " + filledTradeCount + "," +
+                                "\"account\": \"" + account + "\"," +
+                                "\"direction\": \"buy\"," +
+                                "}", JSONCompareMode.LENIENT))*/
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -55,9 +58,9 @@ public class LevelTwoTest {
                                 "    \"open\": false\n" +
                                 "}")));
 
-        LevelTwo levelTwo = new LevelTwo("MFSEX", "BYSE", "WPP20023868");
+        LevelTwo levelTwo = new LevelTwo("http://localhost:8089", "MFSEX", "BYSE", account);
 
-        Trade trade = levelTwo.trade(104);
+        Trade trade = levelTwo.trade(104, price);
 
         assertThat(trade.fills.size(), is(1));
         assertThat(trade.fills.get(0).qty, is(filledTradeCount));

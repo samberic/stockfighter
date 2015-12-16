@@ -2,9 +2,15 @@ package com.samatkinson.model;
 
 public class Fill {
     public int qty;
+    public int price;
+    public String ts;
 
-    public Fill(int qty) {
+    public Fill(){}
+
+    public Fill(int qty, int price, String timestamp) {
 
         this.qty = qty;
+        this.price = price;
+        this.ts = timestamp;
     }
 }
