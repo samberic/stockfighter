@@ -12,8 +12,9 @@ public class LevelTwo {
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
         executor.scheduleAtFixedRate(() ->
-                new StockfighterAPI("https://api.stockfighter.io","CURHEX", "BTI", "RTB59046910").
-                        trade(2000, 6000), 0, 1, TimeUnit.SECONDS);
+                new StockfighterAPI("https://api.stockfighter.io","CURHEX", "BTI"
+                ).
+                        trade(2000, 6000, "RTB59046910"), 0, 1, TimeUnit.SECONDS);
     }
 
 
