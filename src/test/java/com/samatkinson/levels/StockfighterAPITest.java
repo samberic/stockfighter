@@ -1,6 +1,7 @@
 package com.samatkinson.levels;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.samatkinson.api.StockfighterAPI;
 import com.samatkinson.model.Trade;
 import org.junit.Rule;
 import org.junit.Test;
@@ -11,7 +12,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-public class LevelTwoTest {
+public class StockfighterAPITest {
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8089);
@@ -69,9 +70,7 @@ public class LevelTwoTest {
                                 "    \"open\": false\n" +
                                 "}")));
 
-        LevelTwo levelTwo = new LevelTwo("http://localhost:8089", "MFSEX", "BYSE", account);
-
-        Trade trade = levelTwo.trade(104, price);
+        Trade trade = new StockfighterAPI("http://localhost:8089", "MFSEX", "BYSE", account).trade(104, price);
 
         assertThat(trade.fills.size(), is(1));
         assertThat(trade.fills.get(0).qty, is(filledTradeCount));
