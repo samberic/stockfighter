@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.samatkinson.model.Trade;
 import org.junit.Rule;
 import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -16,6 +17,15 @@ public class LevelTwoTest {
     public WireMockRule wireMockRule = new WireMockRule(8089);
 
     @Test
+    public void wah(){
+        JSONAssert.assertEquals(
+                "{\"account\": \"WPP20023868\",\"price\": 12311,\"qty\": 104,\"direction\": \"buy\",\"orderType\": \"market\"}",
+                "{\"orderType\":\"market\",\"price\":12311,\"qty\":104,\"account\":\"WPP20023868\",\"direction\":\"buy\"}",
+                JSONCompareMode.NON_EXTENSIBLE);
+
+    }
+
+    @Test
     public void testName() throws Exception {
         int filledTradeCount = 104;
         int price = 12311;
@@ -23,15 +33,16 @@ public class LevelTwoTest {
 
         String orderType = "market";
         String url = "/ob/api/venues/MFSEX/stocks/BYSE/orders";
-        stubFor(post(urlPathMatching(url))/*
+
+        stubFor(post(urlPathMatching(url))
                 .withRequestBody(equalToJson(
                         "{" +
-                                "\"orderType\": \"" + orderType + "\"" +
+                                "\"orderType\": \"" + orderType + "\"," +
                                 "\"price\": " + price + "," +
                                 "\"qty\": " + filledTradeCount + "," +
                                 "\"account\": \"" + account + "\"," +
-                                "\"direction\": \"buy\"," +
-                                "}", JSONCompareMode.LENIENT))*/
+                                "\"direction\": \"buy\"" +
+                                "}", JSONCompareMode.LENIENT))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")

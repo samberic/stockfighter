@@ -57,11 +57,11 @@ public class LevelTwo {
             HttpResponse<JsonNode> jsonNodeHttpResponse = post(format)
                     .header("X-Starfighter-Authorization", authKey)
                     .body(new JsonNode("{" +
-                            "    \"account\": \"" + account + "\",\n" +
-                            "    \"price\": 6100,\n" +
-                            "    \"qty\": " + filledTradeCount + ",\n" +
-                            "    \"direction\": \"buy\",\n" +
-                            "    \"orderType\": \"market\"\n" +
+                            "\"account\": \"" + account + "\"," +
+                            "\"price\": " + price + "," +
+                            "\"qty\": " + filledTradeCount + "," +
+                            "\"direction\": \"buy\"," +
+                            "\"orderType\": \"market\"" +
                             "}"))
                     .asJson();
 
