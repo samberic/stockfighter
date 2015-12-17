@@ -23,9 +23,9 @@ public class StockfighterAPI {
     public String stocksUrl = "/ob/api/venues/%s/stocks";
     public String stockQuoteUrl = "/ob/api/venues/%s/stocks/%s/quote";
     private String orderStatusUrl = "/ob/api/venues/%s/stocks/%s/orders/%s";
+    private String cancelUrl = "/ob/api/venues/%s/stocks/%s/orders/%s";
 
     private String authKey = "276a779958d461a4724220bf4281f4dd3c4f6d01";
-
     private String server;
     private String venue;
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -119,6 +119,18 @@ public class StockfighterAPI {
         HttpResponse<JsonNode> jsonNodeHttpResponse = null;
         try {
             jsonNodeHttpResponse = get(format)
+                    .header("X-Starfighter-Authorization", authKey).asJson();
+            return objectMapper.readValue(getJsonContent(jsonNodeHttpResponse), Trade.class);
+        } catch (UnirestException | IOException e) {
+            throw new StockfighterException("Error in quote requestt", e);
+        }
+    }
+
+    public Trade cancelOrder(int orderID, String symbol) {
+        String format = server + String.format(cancelUrl, venue, symbol, orderID);
+        try {
+            System.out.println(format);
+            HttpResponse<JsonNode> jsonNodeHttpResponse = delete(format)
                     .header("X-Starfighter-Authorization", authKey).asJson();
             return objectMapper.readValue(getJsonContent(jsonNodeHttpResponse), Trade.class);
         } catch (UnirestException | IOException e) {

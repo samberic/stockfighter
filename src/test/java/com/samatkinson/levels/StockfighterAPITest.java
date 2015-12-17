@@ -217,7 +217,43 @@ public class StockfighterAPITest {
 
         assertThat(trade.fills.size(), is(1));
         assertThat(trade.totalFilled, is(85));
+    }
 
+    @Test
+    public void cancel() throws Exception {
+        String url = "/ob/api/venues/TESTEX/stocks/FOOBAR/orders/1234";
+        stubFor(delete(urlPathMatching(url))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{" +
+                                "  \"ok\": true," +
+                                "  \"symbol\": \"ROBO\"," +
+                                "  \"venue\": \"ROBUST\"," +
+                                "  \"direction\": \"buy\"," +
+                                "  \"originalQty\": 85," +
+                                "  \"qty\": 0," +
+                                "  \"price\": 993," +
+                                "  \"orderType\": \"immediate-or-cancel\"," +
+                                "  \"id\": 1," +
+                                "  \"account\": \"FOO123\"," +
+                                "  \"ts\": \"2015-08-10T16:10:32.987288+09:00\"," +
+                                "  \"fills\": [" +
+                                "    {" +
+                                "      \"price\": 366," +
+                                "      \"qty\": 45," +
+                                "      \"ts\": \"2015-08-10T16:10:32.987292+09:00\"" +
+                                "    }" +
+                                "  ]," +
+                                "  \"totalFilled\": 85," +
+                                "  \"open\": false" +
+                                "}")));
+
+        Trade trade = new StockfighterAPI(testServer, "TESTEX").cancelOrder(1234, "FOOBAR");
+
+        assertThat(trade.fills.size(), is(1));
+        assertThat(trade.totalFilled, is(85));
+        assertThat(trade.qty, is(0));
     }
 
 
