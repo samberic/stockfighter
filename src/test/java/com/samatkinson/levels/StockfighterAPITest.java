@@ -3,6 +3,7 @@ package com.samatkinson.levels;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.samatkinson.api.StockfighterAPI;
 import com.samatkinson.model.OrderBook;
+import com.samatkinson.model.Quote;
 import com.samatkinson.model.Symbol;
 import com.samatkinson.model.Trade;
 import org.junit.Rule;
@@ -148,6 +149,74 @@ public class StockfighterAPITest {
         List<Symbol> symbols = new StockfighterAPI(testServer, "TESTEX").symbols();
 
         assertThat(symbols.size(), is(3));
+
+    }
+
+    @Test
+    public void stockQuote() throws Exception {
+        String symbol = "FOOBAR";
+        String url = "/ob/api/venues/TESTEX/stocks/" + symbol + "/quote";
+        stubFor(get(urlPathMatching(url))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{" +
+                                "    \"ok\": true," +
+                                "    \"symbol\": \"" + symbol + "\"," +
+                                "    \"venue\": \"TESTEX\"," +
+                                "    \"bid\": 5100, " +
+                                "    \"ask\": 5125, " +
+                                "    \"bidSize\": 392, " +
+                                "    \"askSize\": 711, " +
+                                "    \"bidDepth\": 2748, " +
+                                "    \"askDepth\": 2237, " +
+                                "    \"last\": 5125, " +
+                                "    \"lastSize\": 52," +
+                                "    \"lastTrade\": \"2015-07-13T05:38:17.33640392Z\"," +
+                                "    \"quoteTime\": \"2015-07-13T05:38:17.33640392Z\"" +
+                                "}")));
+
+        Quote quote = new StockfighterAPI(testServer, "TESTEX").stockQuote(symbol);
+
+        assertThat(quote.bid, is(5100));
+        assertThat(quote.ask, is(5125));
+
+    }
+
+    @Test
+    public void orderStatus() throws Exception {
+        String url = "/ob/api/venues/TESTEX/stocks/FOOBAR/orders/1234";
+        stubFor(get(urlPathMatching(url))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{" +
+                                "  \"ok\": true," +
+                                "  \"symbol\": \"ROBO\"," +
+                                "  \"venue\": \"ROBUST\"," +
+                                "  \"direction\": \"buy\"," +
+                                "  \"originalQty\": 85," +
+                                "  \"qty\": 40," +
+                                "  \"price\": 993," +
+                                "  \"orderType\": \"immediate-or-cancel\"," +
+                                "  \"id\": 1234," +
+                                "  \"account\": \"FOO123\"," +
+                                "  \"ts\": \"2015-08-10T16:10:32.987288+09:00\"," +
+                                "  \"fills\": [" +
+                                "    {" +
+                                "      \"price\": 366," +
+                                "      \"qty\": 45," +
+                                "      \"ts\": \"2015-08-10T16:10:32.987292+09:00\"" +
+                                "    }" +
+                                "  ]," +
+                                "  \"totalFilled\": 85," +
+                                "  \"open\": true" +
+                                "}")));
+
+        Trade trade = new StockfighterAPI(testServer, "TESTEX").orderStatus(1234, "FOOBAR");
+
+        assertThat(trade.fills.size(), is(1));
+        assertThat(trade.totalFilled, is(85));
 
     }
 
