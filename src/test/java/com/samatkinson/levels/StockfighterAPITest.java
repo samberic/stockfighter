@@ -3,11 +3,14 @@ package com.samatkinson.levels;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.samatkinson.api.StockfighterAPI;
 import com.samatkinson.model.OrderBook;
+import com.samatkinson.model.Symbol;
 import com.samatkinson.model.Trade;
 import org.junit.Rule;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
+
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.hamcrest.CoreMatchers.is;
@@ -72,7 +75,7 @@ public class StockfighterAPITest {
                                 "    \"open\": false\n" +
                                 "}")));
 
-        Trade trade = new StockfighterAPI(testServer, "MFSEX", "BYSE").trade(104, price, account);
+        Trade trade = new StockfighterAPI(testServer, "BYSE").trade(104, price, account, "MFSEX");
 
         assertThat(trade.fills.size(), is(1));
         assertThat(trade.fills.get(0).qty, is(filledTradeCount));
@@ -107,7 +110,7 @@ public class StockfighterAPITest {
                                 "  \"ts\": \"2015-12-04T09:02:16.680986205Z\"" +
                                 "}")));
 
-        OrderBook orderBook = new StockfighterAPI(testServer, "FOOBAR", "TESTEX").orderBook();
+        OrderBook orderBook = new StockfighterAPI(testServer, "TESTEX").orderBook("FOOBAR");
 
         assertThat(orderBook.bids.size(), is(4));
         assertThat(orderBook.asks.size(), is(3));
@@ -116,4 +119,37 @@ public class StockfighterAPITest {
         assertThat(orderBook.asks.get(2).isBuy, is(false));
 
     }
+
+    @Test
+    public void stocksOnExchange() throws Exception {
+        String url = "/ob/api/venues/TESTEX/stocks";
+        stubFor(get(urlPathMatching(url))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{" +
+                                "  \"ok\": true," +
+                                "  \"symbols\": [" +
+                                "    {" +
+                                "      \"name\": \"Foreign Owned Occulmancy\", " +
+                                "     \"symbol\": \"FOO\"" +
+                                "    }," +
+                                "    {" +
+                                "      \"name\": \"Best American Ricecookers\"," +
+                                "      \"symbol\": \"BAR\"" +
+                                "    }," +
+                                "    {" +
+                                "      \"name\": \"Badly Aliased Zebras\", " +
+                                "      \"symbol\": \"BAZ\"" +
+                                "    }" +
+                                "  ] " +
+                                "}")));
+
+        List<Symbol> symbols = new StockfighterAPI(testServer, "TESTEX").symbols();
+
+        assertThat(symbols.size(), is(3));
+
+    }
+
+
 }
