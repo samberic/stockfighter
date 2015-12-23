@@ -4,11 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.mashape.unirest.request.GetRequest;
+import com.mashape.unirest.request.HttpRequest;
+import com.mashape.unirest.request.HttpRequestWithBody;
 import com.samatkinson.error.StockfighterException;
 import com.samatkinson.model.OrderBook;
 import com.samatkinson.model.Quote;
 import com.samatkinson.model.Symbol;
 import com.samatkinson.model.Trade;
+import com.sun.tools.internal.ws.wsdl.document.http.HTTPUrlReplacement;
 import org.json.JSONArray;
 
 import java.io.IOException;
@@ -37,55 +41,24 @@ public class StockfighterAPI {
     }
 
     public Trade trade(int filledTradeCount, int price, String account, Object symbol, String orderType) {
-        try {
             String format = server + String.format(bookTradeUrl, venue, symbol);
-            HttpResponse<String> s = post(format)
-                    .header("X-Starfighter-Authorization", authKey)
-                    .body(new JsonNode("{" +
-                            "\"account\": \"" + account + "\"," +
-                            "\"price\": " + price + "," +
-                            "\"qty\": " + filledTradeCount + "," +
-                            "\"direction\": \"buy\"," +
-                            "\"orderType\": \"" + orderType + "\"" +
-                            "}"))
-                    .asString();
 
-            System.out.println(s.getBody());
+            HttpRequestWithBody post = post(format);
+            post.body(new JsonNode("{" +
+                    "\"account\": \"" + account + "\"," +
+                    "\"price\": " + price + "," +
+                    "\"qty\": " + filledTradeCount + "," +
+                    "\"direction\": \"buy\"," +
+                    "\"orderType\": \"" + orderType + "\"" +
+                    "}"));
 
-            HttpResponse<JsonNode> jsonNodeHttpResponse = post(format)
-                    .header("X-Starfighter-Authorization", authKey)
-                    .body(new JsonNode("{" +
-                            "\"account\": \"" + account + "\"," +
-                            "\"price\": " + price + "," +
-                            "\"qty\": " + filledTradeCount + "," +
-                            "\"direction\": \"buy\"," +
-                            "\"orderType\": \"" + orderType + "\"" +
-                            "}"))
-                    .asJson();
-
-
-            Trade trade = objectMapper.readValue(getJsonContent(jsonNodeHttpResponse), Trade.class);
-
-            return trade;
-
-        } catch (UnirestException | IOException e) {
-            throw new StockfighterException("Error in post request", e);
-
-        }
+            return make(post).as(Trade.class);
 
     }
 
     public OrderBook orderBook(String symbol) {
         String format = server + String.format(orderBookUrl, venue, symbol);
-        HttpResponse<JsonNode> jsonNodeHttpResponse = null;
-        try {
-            jsonNodeHttpResponse = get(format)
-                    .header("X-Starfighter-Authorization", authKey).asJson();
-            return objectMapper.readValue(getJsonContent(jsonNodeHttpResponse), OrderBook.class);
-
-        } catch (UnirestException | IOException e) {
-            throw new StockfighterException("Error in order book request", e);
-        }
+        return make(get(format)).as(OrderBook.class);
     }
 
     public List<Symbol> symbols() {
@@ -98,7 +71,7 @@ public class StockfighterAPI {
             JSONArray stocks = jsonNodeHttpResponse.getBody().getObject().getJSONArray("symbols");
 
             List<Symbol> result = new ArrayList<>();
-            for(int i=0; i<stocks.length(); i++) {
+            for (int i = 0; i < stocks.length(); i++) {
                 result.add(objectMapper.readValue(stocks.getJSONObject(i).toString(), Symbol.class));
             }
 
@@ -115,37 +88,27 @@ public class StockfighterAPI {
 
     public Quote stockQuote(String symbol) {
         String format = server + String.format(stockQuoteUrl, venue, symbol);
-        HttpResponse<JsonNode> jsonNodeHttpResponse = null;
-        try {
-            jsonNodeHttpResponse = get(format)
-                    .header("X-Starfighter-Authorization", authKey).asJson();
-            return objectMapper.readValue(getJsonContent(jsonNodeHttpResponse), Quote.class);
 
-        } catch (UnirestException | IOException e) {
-            throw new StockfighterException("Error in quote requestt", e);
-        }
+        return make(get(format)).as(Quote.class);
+
     }
 
     public Trade orderStatus(int orderID, String symbol) {
         String format = server + String.format(orderStatusUrl, venue, symbol, orderID);
-        HttpResponse<JsonNode> jsonNodeHttpResponse = null;
-        try {
-            jsonNodeHttpResponse = get(format)
-                    .header("X-Starfighter-Authorization", authKey).asJson();
-            return objectMapper.readValue(getJsonContent(jsonNodeHttpResponse), Trade.class);
-        } catch (UnirestException | IOException e) {
-            throw new StockfighterException("Error in quote requestt", e);
-        }
+
+        return make(get(format)).as(Trade.class);
     }
 
     public Trade cancelOrder(int orderID, String symbol) {
         String format = server + String.format(cancelUrl, venue, symbol, orderID);
-        StockfighterResponse stockfighterResponse =
-                new StockfighterResponse(delete(format));
 
-        stockfighterResponse.execute();
+        return make(delete(format)).as(Trade.class);
+    }
 
-        return stockfighterResponse.as(Trade.class);
+    private StockfighterResponse make(HttpRequest request) {
+        StockfighterResponse response = new StockfighterResponse(request);
+        response.execute();
+        return response;
     }
 
 }

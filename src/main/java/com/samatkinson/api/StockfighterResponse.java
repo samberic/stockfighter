@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.samatkinson.error.StockfighterException;
 import com.samatkinson.model.Trade;
@@ -14,11 +15,11 @@ import java.io.IOException;
 public class StockfighterResponse {
     private String authKey = "276a779958d461a4724220bf4281f4dd3c4f6d01";
 
-    private final HttpRequestWithBody request;
+    private final HttpRequest request;
     private HttpResponse<JsonNode> jsonNodeHttpResponse;
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    public StockfighterResponse(HttpRequestWithBody request) {
+    public StockfighterResponse(HttpRequest request) {
         this.request = request;
     }
 
@@ -39,7 +40,7 @@ public class StockfighterResponse {
     }
 
 
-    public Trade as(Class<Trade> tradeClass) {
+    public <T> T as(Class<T> tradeClass) {
         try {
             if(getBoolean("ok")){
                 return objectMapper.readValue(objectFromResponse().toString(), tradeClass);
