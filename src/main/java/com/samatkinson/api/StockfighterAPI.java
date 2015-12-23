@@ -140,18 +140,12 @@ public class StockfighterAPI {
 
     public Trade cancelOrder(int orderID, String symbol) {
         String format = server + String.format(cancelUrl, venue, symbol, orderID);
-        try {
-            StockfighterResponse stockfighterResponse = new StockfighterResponse(delete(format)
-                    .header("X-Starfighter-Authorization", authKey).asJson());
+        StockfighterResponse stockfighterResponse =
+                new StockfighterResponse(delete(format));
 
-            if(stockfighterResponse.getBoolean("ok")){
-                return stockfighterResponse.as(Trade.class);
-            }else{
-                throw new StockfighterException(stockfighterResponse.getString("error"));
-            }
-        } catch (UnirestException e) {
-            throw new StockfighterException("Error in quote requestt", e);
-        }
+        stockfighterResponse.execute();
+
+        return stockfighterResponse.as(Trade.class);
     }
 
 }
