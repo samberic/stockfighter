@@ -2,38 +2,34 @@ package com.samatkinson.levels;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.samatkinson.api.StockfighterAPI;
+import com.samatkinson.error.StockfighterException;
 import com.samatkinson.model.OrderBook;
 import com.samatkinson.model.Quote;
 import com.samatkinson.model.Symbol;
 import com.samatkinson.model.Trade;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 public class StockfighterAPITest {
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8089);
+    @ClassRule
+    public static WireMockRule wireMockRule = new WireMockRule(8089);
     private String testServer = "http://localhost:8089";
 
     @Test
-    public void wah() {
-        JSONAssert.assertEquals(
-                "{\"account\": \"WPP20023868\",\"price\": 12311,\"qty\": 104,\"direction\": \"buy\",\"orderType\": \"market\"}",
-                "{\"orderType\":\"market\",\"price\":12311,\"qty\":104,\"account\":\"WPP20023868\",\"direction\":\"buy\"}",
-                JSONCompareMode.NON_EXTENSIBLE);
-
-    }
-
-    @Test
-    public void testName() throws Exception {
+    public void basicTradeExecutes() throws Exception {
         int filledTradeCount = 104;
         int price = 12311;
         String account = "WPP20023868";
@@ -42,14 +38,14 @@ public class StockfighterAPITest {
         String url = "/ob/api/venues/MFSEX/stocks/BYSE/orders";
 
         stubFor(post(urlPathMatching(url))
-                .withRequestBody(equalToJson(
-                        "{" +
-                                "\"orderType\": \"" + orderType + "\"," +
-                                "\"price\": " + price + "," +
-                                "\"qty\": " + filledTradeCount + "," +
-                                "\"account\": \"" + account + "\"," +
-                                "\"direction\": \"buy\"" +
-                                "}", JSONCompareMode.LENIENT))
+//                .withRequestBody(equalToJson(
+//                        "{" +
+//                                "\"orderType\": \"" + orderType + "\"," +
+//                                "\"price\": " + price + "," +
+//                                "\"qty\": " + filledTradeCount + "," +
+//                                "\"account\": \"" + account + "\"," +
+//                                "\"direction\": \"buy\"" +
+//                                "}", JSONCompareMode.LENIENT))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -76,7 +72,7 @@ public class StockfighterAPITest {
                                 "    \"open\": false\n" +
                                 "}")));
 
-        Trade trade = new StockfighterAPI(testServer, "BYSE").trade(104, price, account, "MFSEX");
+        Trade trade = new StockfighterAPI(testServer, "MFSEX").trade(104, price, account, "BYSE", Trade.LIMIT);
 
         assertThat(trade.fills.size(), is(1));
         assertThat(trade.fills.get(0).qty, is(filledTradeCount));
@@ -254,6 +250,28 @@ public class StockfighterAPITest {
         assertThat(trade.fills.size(), is(1));
         assertThat(trade.totalFilled, is(85));
         assertThat(trade.qty, is(0));
+    }
+
+    @Test
+    public void whenACallFailsWillThrowAnException() throws Exception {
+        String url = "/ob/api/venues/TESTEX2/stocks/FOOBAR/orders/1234";
+        String errorMessage = "Not authorized to delete that order.  You have to own account ABC123456";
+        stubFor(delete(urlPathMatching(url))
+                .willReturn(aResponse()
+                        .withStatus(401)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{" +
+                                "  \"ok\": false," +
+                                "  \"error\": \"" + errorMessage + ".\"" +
+                                "}")));
+
+            try{
+                new StockfighterAPI(testServer, "TESTEX2").cancelOrder(1234, "FOOBAR");
+            }catch (StockfighterException e){
+                assertThat(e.getMessage(), containsString(errorMessage));
+                return;
+            }
+        fail("Should have recieved exception");
     }
 
 

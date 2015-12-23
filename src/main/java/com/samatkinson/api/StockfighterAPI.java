@@ -36,9 +36,21 @@ public class StockfighterAPI {
         this.venue = venue;
     }
 
-    public Trade trade(int filledTradeCount, int price, String account, Object symbol) {
+    public Trade trade(int filledTradeCount, int price, String account, Object symbol, String orderType) {
         try {
-            String format = server + String.format(bookTradeUrl, symbol, venue);
+            String format = server + String.format(bookTradeUrl, venue, symbol);
+            HttpResponse<String> s = post(format)
+                    .header("X-Starfighter-Authorization", authKey)
+                    .body(new JsonNode("{" +
+                            "\"account\": \"" + account + "\"," +
+                            "\"price\": " + price + "," +
+                            "\"qty\": " + filledTradeCount + "," +
+                            "\"direction\": \"buy\"," +
+                            "\"orderType\": \"" + orderType + "\"" +
+                            "}"))
+                    .asString();
+
+            System.out.println(s.getBody());
 
             HttpResponse<JsonNode> jsonNodeHttpResponse = post(format)
                     .header("X-Starfighter-Authorization", authKey)
@@ -47,7 +59,7 @@ public class StockfighterAPI {
                             "\"price\": " + price + "," +
                             "\"qty\": " + filledTradeCount + "," +
                             "\"direction\": \"buy\"," +
-                            "\"orderType\": \"market\"" +
+                            "\"orderType\": \"" + orderType + "\"" +
                             "}"))
                     .asJson();
 
@@ -129,12 +141,16 @@ public class StockfighterAPI {
     public Trade cancelOrder(int orderID, String symbol) {
         String format = server + String.format(cancelUrl, venue, symbol, orderID);
         try {
-            System.out.println(format);
             HttpResponse<JsonNode> jsonNodeHttpResponse = delete(format)
                     .header("X-Starfighter-Authorization", authKey).asJson();
-            return objectMapper.readValue(getJsonContent(jsonNodeHttpResponse), Trade.class);
+            if(jsonNodeHttpResponse.getBody().getObject().getBoolean("ok")){
+                return objectMapper.readValue(getJsonContent(jsonNodeHttpResponse), Trade.class);
+            }else{
+                throw new StockfighterException(jsonNodeHttpResponse.getBody().getObject().getString("error"));
+            }
         } catch (UnirestException | IOException e) {
             throw new StockfighterException("Error in quote requestt", e);
         }
     }
+
 }

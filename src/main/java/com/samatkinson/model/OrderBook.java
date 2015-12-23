@@ -1,9 +1,11 @@
 package com.samatkinson.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderBook {
-    public boolean ok;
     public String venue;
     public String symbol;
     public String ts;

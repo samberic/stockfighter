@@ -1,9 +1,11 @@
 package com.samatkinson.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.Date;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Quote {
-    public String ok;
     public String symbol;
     public String venue;
     public int bid;

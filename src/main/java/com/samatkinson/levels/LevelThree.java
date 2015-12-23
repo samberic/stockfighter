@@ -1,34 +1,26 @@
 package com.samatkinson.levels;
 
 import com.samatkinson.api.StockfighterAPI;
-import com.samatkinson.model.OrderBook;
+import com.samatkinson.model.Quote;
 import com.samatkinson.model.Trade;
 
 public class LevelThree {
-    private static final String symbol = "ARCC";
-    private static String account = "DFB4908077";
-    private static int noOfStock = 0;
+    private static final String symbol = "IXSU";
+    private static String account = "SS58566137";
+//    private static Blotter blotter;
 
     public static void main(String[] args) {
-        StockfighterAPI stockfighterAPI = new StockfighterAPI("https://api.stockfighter.io", "DWMEX");
+        StockfighterAPI stockfighterAPI = new StockfighterAPI("https://api.stockfighter.io", "YNYEX");
+        Quote quote = stockfighterAPI.stockQuote(symbol);
 
-        OrderBook orderBook = stockfighterAPI.orderBook(symbol);
+        int ask = quote.ask;
+        int bid = quote.bid;
 
-        int ask = orderBook.asks.get(0).price;
-        int bid = orderBook.bids.get(0).price;
+        Trade trade = stockfighterAPI.trade(1000, bid - 5, account, symbol, Trade.LIMIT);
 
-        while (true) {
-
-            Trade buyTrade = stockfighterAPI.trade(1000 - noOfStock, bid - 1, account, symbol);
-            noOfStock = buyTrade.totalFilled;
-
-
-            Trade sellTrade = stockfighterAPI.trade(noOfStock, ask + 1, account, symbol);
-            noOfStock -= sellTrade.totalFilled;
-        }
-
-
+//        blotter.add(trade);
 
 
     }
+
 }

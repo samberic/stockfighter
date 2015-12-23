@@ -1,11 +1,13 @@
 package com.samatkinson.model;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.List;
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Trade {
+    public static final String LIMIT = "limit";
     public List<Fill> fills;
     public String orderType;
-    public boolean ok;
     public String symbol;
     public String venue;
     public String direction;
@@ -22,7 +24,6 @@ public class Trade {
 
     public Trade(String orderType,
                  List<Fill> fills,
-                 boolean ok,
                  String symbol,
                  String venue,
                  String direction,
@@ -36,7 +37,6 @@ public class Trade {
                  boolean open) {
         this.orderType = orderType;
         this.fills = fills;
-        this.ok = ok;
         this.symbol = symbol;
         this.venue = venue;
         this.direction = direction;

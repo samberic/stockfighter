@@ -1,5 +1,8 @@
 package com.samatkinson.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Fill {
     public int qty;
     public int price;
