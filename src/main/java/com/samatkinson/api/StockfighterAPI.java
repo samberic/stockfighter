@@ -141,14 +141,15 @@ public class StockfighterAPI {
     public Trade cancelOrder(int orderID, String symbol) {
         String format = server + String.format(cancelUrl, venue, symbol, orderID);
         try {
-            HttpResponse<JsonNode> jsonNodeHttpResponse = delete(format)
-                    .header("X-Starfighter-Authorization", authKey).asJson();
-            if(jsonNodeHttpResponse.getBody().getObject().getBoolean("ok")){
-                return objectMapper.readValue(getJsonContent(jsonNodeHttpResponse), Trade.class);
+            StockfighterResponse stockfighterResponse = new StockfighterResponse(delete(format)
+                    .header("X-Starfighter-Authorization", authKey).asJson());
+
+            if(stockfighterResponse.getBoolean("ok")){
+                return stockfighterResponse.as(Trade.class);
             }else{
-                throw new StockfighterException(jsonNodeHttpResponse.getBody().getObject().getString("error"));
+                throw new StockfighterException(stockfighterResponse.getString("error"));
             }
-        } catch (UnirestException | IOException e) {
+        } catch (UnirestException e) {
             throw new StockfighterException("Error in quote requestt", e);
         }
     }
