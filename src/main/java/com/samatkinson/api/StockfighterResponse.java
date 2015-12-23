@@ -5,12 +5,14 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequest;
-import com.mashape.unirest.request.HttpRequestWithBody;
 import com.samatkinson.error.StockfighterException;
-import com.samatkinson.model.Trade;
+import com.samatkinson.model.Symbol;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StockfighterResponse {
     private String authKey = "276a779958d461a4724220bf4281f4dd3c4f6d01";
@@ -54,5 +56,21 @@ public class StockfighterResponse {
 
     public String getString(String error) {
         return objectFromResponse().getString(error);
+    }
+
+    public <T> List<T> asListOf(Class<T> aClass, String arrayName) {
+        try {
+            JSONArray jsonArray = jsonNodeHttpResponse.getBody().getObject().getJSONArray(arrayName);
+
+            List<T> result = new ArrayList<>();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                result.add(objectMapper.readValue(jsonArray.getJSONObject(i).toString(), aClass));
+            }
+
+            return result;
+
+        } catch (IOException e) {
+            throw new StockfighterException("Error parsing JSON to class", e);
+        }
     }
 }
