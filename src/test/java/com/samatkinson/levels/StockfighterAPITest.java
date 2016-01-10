@@ -8,19 +8,16 @@ import com.samatkinson.model.Quote;
 import com.samatkinson.model.Symbol;
 import com.samatkinson.model.Trade;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import java.util.List;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 public class StockfighterAPITest {
 
@@ -38,14 +35,14 @@ public class StockfighterAPITest {
         String url = "/ob/api/venues/MFSEX/stocks/BYSE/orders";
 
         stubFor(post(urlPathMatching(url))
-//                .withRequestBody(equalToJson(
-//                        "{" +
-//                                "\"orderType\": \"" + orderType + "\"," +
-//                                "\"price\": " + price + "," +
-//                                "\"qty\": " + filledTradeCount + "," +
-//                                "\"account\": \"" + account + "\"," +
-//                                "\"direction\": \"buy\"" +
-//                                "}", JSONCompareMode.LENIENT))
+                .withRequestBody(equalToJson(
+                        "{" +
+                                "\"orderType\": \"" + orderType + "\"," +
+                                "\"price\": " + price + "," +
+                                "\"qty\": " + filledTradeCount + "," +
+                                "\"account\": \"" + account + "\"," +
+                                "\"direction\": \"buy\"" +
+                                "}", JSONCompareMode.LENIENT))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -265,12 +262,12 @@ public class StockfighterAPITest {
                                 "  \"error\": \"" + errorMessage + ".\"" +
                                 "}")));
 
-            try{
-                new StockfighterAPI(testServer, "TESTEX2").cancelOrder(1234, "FOOBAR");
-            }catch (StockfighterException e){
-                assertThat(e.getMessage(), containsString(errorMessage));
-                return;
-            }
+        try {
+            new StockfighterAPI(testServer, "TESTEX2").cancelOrder(1234, "FOOBAR");
+        } catch (StockfighterException e) {
+            assertThat(e.getMessage(), containsString(errorMessage));
+            return;
+        }
         fail("Should have recieved exception");
     }
 

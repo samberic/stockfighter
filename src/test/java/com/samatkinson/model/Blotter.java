@@ -1,17 +1,26 @@
 package com.samatkinson.model;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class Blotter {
-    private static int noOfStock = 0;
-    private static int position = 0;
+    List<Position> positions = new LinkedList<>();
 
     public void add(Trade trade) {
-        if(trade.direction.equals("buy")){
-            noOfStock += trade.totalFilled;
-            trade.fills.forEach(t -> position += (t.qty * t.price));
-        }
+        Position first = positions.stream().filter(
+            p -> p.symbol().equals(trade.symbol))
+            .findFirst()
+            .orElseGet(() -> {
+                Position e = new Position();
+                positions.add(e);
+                return e;
+            });
+
+        trade.fills.forEach(fill -> first.update(fill.price, fill.qty));
+
     }
 
-    public int profit(int bid, int ask){
-        return (noOfStock * bid) - position;
+    public List<Position> positions() {
+        return positions;
     }
 }
